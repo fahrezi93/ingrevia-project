@@ -1,28 +1,28 @@
-// Get user profile
-exports.getProfile = async (req, res) => {
-    // Fetch profile logic here...
-    res.send('Get profile endpoint hit');
+const db = require('../config/firebase');
+
+// Get User Profile
+const getProfile = async (req, res) => {
+  const userRef = db.collection('users').doc(req.userId);
+  const userDoc = await userRef.get();
+
+  if (!userDoc.exists) return res.status(404).json({ message: 'User not found' });
+
+  res.json(userDoc.data());
 };
 
-// Update user profile
-exports.updateProfile = async (req, res) => {
-    // Update profile logic here...
-    res.send('Update profile endpoint hit');
+// Update User Profile
+const updateProfile = async (req, res) => {
+  const { weight, height, activityFrequency, theme } = req.body;
+  const userRef = db.collection('users').doc(req.userId);
+
+  await userRef.update({
+    weight,
+    height,
+    activityFrequency,
+    theme,
+  });
+
+  res.json({ message: 'Profile updated successfully' });
 };
 
-// Get user theme
-exports.getTheme = async (req, res) => {
-    // Fetch theme logic here...
-    res.send('Get theme endpoint hit');
-};
-
-// Update profile picture
-exports.updateProfilePic = async (req, res) => {
-    // Update profile picture logic here...
-    res.send('Update profile picture endpoint hit');
-};
-
-// About developer
-exports.about = async (req, res) => {
-    res.send('About endpoint hit');
-};
+module.exports = { getProfile, updateProfile };

@@ -1,3 +1,5 @@
+const { db } = require('../config/firebase');
+
 // Get recommendations
 exports.getRecommendations = async (req, res) => {
     // Fetch recommendations logic here...

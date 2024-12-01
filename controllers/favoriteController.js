@@ -1,5 +1,6 @@
 const Favorite = require('../models/Favorite');
 const Recipe = require('../models/Recipe');
+const { db } = require('../config/firebase');
 
 // Mendapatkan daftar resep favorit user
 exports.getFavorites = async (req, res) => {

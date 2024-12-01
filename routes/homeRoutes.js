@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getRecommendations, search, getCategories, discover } = require('../controllers/homeController');
+const authenticate = require('../middleware/authenticate');
+const { getRecommendations } = require('../controllers/homeController');
 
 // Home endpoints
 router.get('/recommendations', getRecommendations);

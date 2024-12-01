@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const authenticate = require('../middleware/authenticate');
+const { addToFavorites, getFavorites } = require('../controllers/favoriteController');
+
 const {
     getFavorites,
     addFavorite,

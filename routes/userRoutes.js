@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getProfile, updateProfile, getTheme, updateProfilePic, about } = require('../controllers/userController');
+const authenticate = require('../middleware/authenticate');
+const { getProfile, updateProfile, uploadProfilePic } = require('../controllers/userController');
 
 // Get profile
 router.get('/profile', getProfile);

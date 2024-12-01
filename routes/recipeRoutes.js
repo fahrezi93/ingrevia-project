@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getRecipes, searchRecipes, getRecipeById } = require('../controllers/recipeController');
+const authenticate = require('../middleware/authenticate');
+const { getRecommendations } = require('../controllers/homeController');
 
 // Recipe endpoints
 router.get('/', getRecipes);

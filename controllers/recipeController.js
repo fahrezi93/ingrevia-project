@@ -1,17 +1,22 @@
-// Get all recipes
-exports.getRecipes = async (req, res) => {
-    // Fetch recipes logic here...
-    res.send('Get all recipes endpoint hit');
-};
+const { db } = require('../config/firebase');
 
-// Search recipes
-exports.searchRecipes = async (req, res) => {
-    // Search recipes logic here...
-    res.send('Search recipes endpoint hit');
+// Get all recipes
+const getAllRecipes = async (req, res) => {
+  const recipesSnapshot = await db.collection('recipes').get();
+  const recipes = recipesSnapshot.docs.map(doc => doc.data());
+
+  res.json(recipes);
 };
 
 // Get recipe by ID
-exports.getRecipeById = async (req, res) => {
-    // Fetch recipe by ID logic here...
-    res.send('Get recipe by ID endpoint hit');
+const getRecipeById = async (req, res) => {
+  const { id } = req.params;
+  const recipeRef = db.collection('recipes').doc(id);
+  const recipeDoc = await recipeRef.get();
+
+  if (!recipeDoc.exists) return res.status(404).json({ message: 'Recipe not found' });
+
+  res.json(recipeDoc.data());
 };
+
+module.exports = { getAllRecipes, getRecipeById };
