@@ -1,11 +1,11 @@
+// routes/recipeRoutes.js
+
 const express = require('express');
 const router = express.Router();
-const authenticate = require('../middleware/authenticate');
-const { getRecommendations } = require('../controllers/homeController');
+const { getAllRecipes, getRecipeById } = require('../controllers/recipeController');  // Memastikan kamu mengimpor fungsi yang benar
 
 // Recipe endpoints
-router.get('/', getRecipes);
-router.get('/search', searchRecipes);
-router.get('/:id', getRecipeById);
+router.get('/', getAllRecipes);  // Menggunakan getAllRecipes
+router.get('/:id', getRecipeById);  // Menggunakan getRecipeById
 
 module.exports = router;
