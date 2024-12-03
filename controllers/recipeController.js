@@ -1,4 +1,3 @@
-// controllers/recipeController.js
 const { db } = require('../config/firebase');
 
 // Get all recipes

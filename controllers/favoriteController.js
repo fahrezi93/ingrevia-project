@@ -1,4 +1,3 @@
-// controllers/favoriteController.js
 const Favorite = require('../models/Favorite');
 const Recipe = require('../models/Recipe');
 const { db } = require('../config/firebase');

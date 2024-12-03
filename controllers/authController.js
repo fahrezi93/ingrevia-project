@@ -1,4 +1,3 @@
-// controllers/authController.js
 const db = require('../config/firebase');  // Pastikan Firebase dikonfigurasi dengan benar
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');

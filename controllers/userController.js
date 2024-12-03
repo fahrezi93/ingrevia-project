@@ -1,5 +1,4 @@
-// controllers/userController.js
-
+const db = require('../config/firebase');
 // Fungsi untuk mengambil profil pengguna
 const getProfile = (req, res) => {
     // Logika untuk mendapatkan profil pengguna dari database atau Firestore
