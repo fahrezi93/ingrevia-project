@@ -1,5 +1,3 @@
-// routes/recipeRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const { getAllRecipes, getRecipeById } = require('../controllers/recipeController');  // Memastikan kamu mengimpor fungsi yang benar
