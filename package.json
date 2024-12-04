@@ -9,6 +9,7 @@
     "express": "^4.21.1",
     "firebase": "^11.0.2",
     "firebase-admin": "^13.0.1",
+    "ingrevia-project": "file:",
     "json2csv": "^6.0.0-alpha.2",
     "jwt-simple": "^0.5.6",
     "mongoose": "^8.8.2",
