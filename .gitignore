@@ -1,4 +1,6 @@
-# Ignore .env file
 node_modules
 .env
-config/ingrevia-firebase-adminsdk-n4aon-691dee1cf8.json
+service.json
+firebaseService.json
+dockerfile
+adsaddsa

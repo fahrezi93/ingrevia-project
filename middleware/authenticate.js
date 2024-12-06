@@ -1,24 +1,26 @@
-const jwt = require('jwt-simple');
-const { db } = require('../config/firebase');
+const admin = require('firebase-admin'); // Mengimpor Firebase Admin SDK
 
 const authenticate = async (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+  const token = req.header('Authorization')?.replace('Bearer ', ''); // Ambil token dari header Authorization
 
-  if (!token) return res.status(401).json({ message: 'No token provided' });
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
 
   try {
-    const decoded = jwt.decode(token, process.env.JWT_SECRET);
-    req.userId = decoded.userId;
+    // Verifikasi ID token dengan Firebase Admin SDK
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.userId = decodedToken.uid; // Simpan userId dari token yang terverifikasi ke dalam request
 
-    // Check if user exists
-    const userRef = db.collection('users').doc(req.userId);
-    const userDoc = await userRef.get();
+    // Cek apakah user ada di Firestore (opsional)
+    // const userRef = db.collection('users').doc(req.userId);
+    // const userDoc = await userRef.get();
+    // if (!userDoc.exists) return res.status(404).json({ message: 'User not found' });
 
-    if (!userDoc.exists) return res.status(404).json({ message: 'User not found' });
-
-    next();
+    next(); // Jika token valid dan user ada, lanjutkan ke route berikutnya
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+    console.error('Error in authentication:', error);
+    return res.status(401).json({ message: 'Invalid token' }); // Jika token tidak valid
   }
 };
 
