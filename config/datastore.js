@@ -1,49 +1,119 @@
-const Firestore = require('@google-cloud/firestore');
-const fs = require('fs');
-const path = require('path');
+const express = require('express');
+const app = express();
 
-// Konfigurasi Firestore
-const db = new Firestore({
-  projectId: 'ingrevia',
-  keyFilename: path.resolve(__dirname, 'service.json'), // Path absolut untuk keamanan
+const admin = require('firebase-admin');
+const credentials = require('../firebaseService.json');
+const { Firestore } = require('@google-cloud/firestore');
+
+// Inisialisasi Firebase Admin dan Firestore
+admin.initializeApp({
+  credential: admin.credential.cert(credentials),
 });
 
-// Membaca dan memproses file recipes.json
-const filePath = path.resolve(__dirname, 'resep.json');
+const db = new Firestore(); // Firestore instance
 
-fs.readFile(filePath, 'utf8', async (err, data) => {
-  if (err) {
-    console.error('Error reading file:', err);
-    return;
-  }
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Fungsi Sign-up (Register)
+app.post('/signup', async (req, res) => {
   try {
-    // Parse data JSON
-    const recipes = JSON.parse(data);
+    const { email, password } = req.body;
 
-    // Validasi bahwa data adalah array
-    if (!Array.isArray(recipes)) {
-      throw new Error('File JSON tidak valid, data harus berupa array.');
-    }
+    // Buat pengguna baru di Firebase Authentication
+    const userResponse = await admin.auth().createUser({
+      email: email,
+      password: password, // Firebase akan meng-hash password secara otomatis
+      emailVerified: false,
+      disabled: false,
+    });
 
-    // Pisahkan data menjadi batch kecil
-    const batchSize = 500; // Maksimum dokumen per batch
-    for (let i = 0; i < recipes.length; i += batchSize) {
-      const batch = db.batch();
-      const chunk = recipes.slice(i, i + batchSize);
+    // Setelah pengguna dibuat, simpan data pengguna di Firestore
+    const userDocRef = db.collection('users').doc(userResponse.uid);
+    await userDocRef.set({
+      email: email,
+      createdAt: new Date().toISOString(),
+      userProfile: {
+        name: 'Default Name', // Kamu bisa tambahkan field lain sesuai kebutuhan
+        address: 'Default Address',
+      },
+    });
 
-      chunk.forEach((recipe, index) => {
-        const docRef = db.collection('recipes').doc(`recipe_${i + index + 1}`); // ID dokumen unik
-        batch.set(docRef, recipe);
-      });
-
-      // Commit batch
-      await batch.commit();
-      console.log(`Batch ${Math.floor(i / batchSize) + 1} berhasil disimpan.`);
-    }
-
-    console.log('Semua data berhasil disimpan ke Firestore.');
-  } catch (parseError) {
-    console.error('Error parsing JSON:', parseError);
+    res.json({ message: 'User berhasil didaftarkan', userResponse });
+  } catch (error) {
+    console.error('Error saat signup:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat signup' });
   }
 });
+
+// Fungsi Sign-in (Login)
+app.post('/signin', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Untuk login menggunakan Firebase Client SDK di frontend, tidak perlu memproses password di backend.
+    res.json({ message: 'Signin harus dilakukan dari front-end menggunakan Firebase Client SDK' });
+  } catch (error) {
+    console.error('Error saat login:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat signin' });
+  }
+});
+
+// Fungsi Reset Password
+app.post('/reset-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Kirim email reset password
+    const resetLink = await admin.auth().generatePasswordResetLink(email);
+    res.json({ message: `Link reset password telah dikirim ke ${email}`, resetLink });
+  } catch (error) {
+    console.error('Error saat reset password:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat reset password' });
+  }
+});
+
+// Fungsi untuk mengambil data pengguna
+app.get('/user/:uid', async (req, res) => {
+  try {
+    const uid = req.params.uid;
+
+    // Mengambil data pengguna dari Firestore
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'User data retrieved', data: userDoc.data() });
+  } catch (error) {
+    console.error('Error saat mengambil data pengguna:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat mengambil data pengguna' });
+  }
+});
+
+// Fungsi untuk memperbarui data pengguna
+app.put('/user/:uid', async (req, res) => {
+  try {
+    const uid = req.params.uid;
+    const { name, address } = req.body;
+
+    // Update data pengguna di Firestore
+    const userDocRef = db.collection('users').doc(uid);
+    await userDocRef.update({
+      'userProfile.name': name,
+      'userProfile.address': address,
+      updatedAt: new Date().toISOString(),
+    });
+
+    res.json({ message: 'User data updated successfully' });
+  } catch (error) {
+    console.error('Error saat memperbarui data pengguna:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat memperbarui data pengguna' });
+  }
+});
+
+// Jalankan server
+// const PORT = 8080;
+// app.listen(PORT, () => {
+//   console.log(`Server berjalan di PORT ${PORT}`);
+// });
