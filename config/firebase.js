@@ -10,4 +10,6 @@ admin.initializeApp({
 const db = admin.firestore();  // Akses Firestore
 const bucket = admin.storage().bucket();  // Akses Firebase Storage
 
+console.log(db); 
+
 module.exports = { db, bucket };

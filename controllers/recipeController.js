@@ -1,4 +1,7 @@
 const { db } = require('../config/firebase');
+const Recipe = require('../models/Recipe');
+const Favorite = require('../models/Favorite');
+
 
 // Get all recipes
 const getAllRecipes = async (req, res) => {

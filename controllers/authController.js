@@ -1,13 +1,13 @@
-const db = require('../config/firebase');  // Pastikan Firebase dikonfigurasi dengan benar
+const { db } = require('../config/firebase');  // Pastikan db diimpor dari firebase.js dengan benar
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// Fungsi register user
+// Fungsi Register
 const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
-    
-    // Mengecek apakah email sudah terdaftar
+
+    // Mengecek apakah email sudah terdaftar di Firestore
     const userSnapshot = await db.collection('users').where('email', '==', email).get();
     if (!userSnapshot.empty) {
       return res.status(400).json({ error: 'Email sudah terdaftar' });

@@ -17,11 +17,11 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/home', homeRoutes);
-app.use('/api/recipes', recipeRoutes);
-app.use('/api/favorites', favoriteRoutes);
+app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
+app.use('/home', homeRoutes);
+app.use('/recipes', recipeRoutes);
+app.use('/favorites', favoriteRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
