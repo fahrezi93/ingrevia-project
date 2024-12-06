@@ -7,4 +7,4 @@ admin.initializeApp({
   databaseURL: 'https://ingrevia-default-rtdb.asia-southeast1.firebasedatabase.app',
 });
 
-module.export = admin;
+module.exports = admin;

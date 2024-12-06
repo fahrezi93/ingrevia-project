@@ -1,85 +1,93 @@
-const { Firestore } = require('@google-cloud/firestore');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const path = require('path');
+const admin = require('../config/firebaseAdmin');
+const db = admin.firestore();
 
-// Inisialisasi Firestore dengan kredensial Google Cloud
-const db = new Firestore({
-  projectId: 'ingrevia', // Ganti dengan ID proyek Google Cloud Anda
-  keyFilename: path.resolve(__dirname, '../service.json'), // Path ke file service account key JSON
-});
-
-// Fungsi register user
+// Register user (Sign-up)
 const register = async (req, res) => {
-  try {
-    const { email, password, name } = req.body;
-
-    // Mengecek apakah email sudah terdaftar
-    const userSnapshot = await db.collection('users').where('email', '==', email).get();
-    if (!userSnapshot.empty) {
-      return res.status(400).json({ error: 'Email sudah terdaftar' });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Menyimpan data user di Firestore
-    const newUserRef = await db.collection('users').add({
-      email,
-      password: hashedPassword,
-      name,
-      createdAt: new Date(),
-    });
-
-    return res.status(201).json({ message: 'User berhasil didaftarkan', userId: newUserRef.id });
-  } catch (error) {
-    console.error('Error register user:', error);
-    res.status(500).json({ error: 'Terjadi kesalahan saat mendaftar user' });
-  }
-};
-
-// Fungsi login user
-const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Mengambil data user dari Firestore berdasarkan email
-    const userSnapshot = await db.collection('users').where('email', '==', email).get();
-    if (userSnapshot.empty) {
-      return res.status(404).json({ error: 'User tidak ditemukan' });
-    }
+    // Buat user dengan email dan password
+    const userResponse = await admin.auth().createUser({
+      email: email,
+      password: password, // Firebase akan otomatis meng-handle password hashing
+      emailVerified: false,
+      disabled: false,
+    });
 
-    const user = userSnapshot.docs[0].data();
+    // Menyimpan data pengguna di Firestore setelah registrasi
+    await db.collection('users').doc(userResponse.uid).set({
+      email: email,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-    // Verifikasi password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Password salah' });
-    }
-
-    // Membuat token JWT
-    const token = jwt.sign({ userId: userSnapshot.docs[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    return res.status(200).json({ message: 'Login berhasil', token });
+    res.json({ message: 'User berhasil didaftarkan', userResponse });
   } catch (error) {
-    console.error('Error login user:', error);
+    console.error('Error saat signup:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat signup' });
+  }
+};
+
+// Login user menggunakan email dan password
+const loginWithEmailPassword = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Login dengan Firebase SDK di sisi klien
+    res.json({ message: 'Login harus dilakukan di front-end menggunakan Firebase Client SDK' });
+  } catch (error) {
+    console.error('Error saat login dengan email dan password:', error);
     res.status(500).json({ error: 'Terjadi kesalahan saat login' });
   }
 };
 
-// Fungsi logout user
+// Login user menggunakan Google ID Token
+const loginWithGoogle = async (req, res) => {
+  try {
+    const { idToken } = req.body; // ID Token yang dikirim dari frontend
+
+    // Verifikasi ID Token dari Google
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const userId = decodedToken.uid;
+
+    // Ambil data user berdasarkan UID dari Firebase Authentication
+    const userRecord = await admin.auth().getUser(userId);
+
+    // Cek apakah data pengguna sudah ada di Firestore, jika belum, buat data
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
+      // Menyimpan data pengguna di Firestore jika belum ada
+      await db.collection('users').doc(userId).set({
+        email: userRecord.email,
+        name: userRecord.displayName,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    res.json({ message: 'Login berhasil dengan Google', userRecord });
+  } catch (error) {
+    console.error('Error saat signin dengan Google:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat signin dengan Google' });
+  }
+};
+
+// Forgot password
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const resetLink = await admin.auth().generatePasswordResetLink(email);
+    res.json({ message: `Link reset password telah dikirim ke ${email}`, resetLink });
+  } catch (error) {
+    console.error('Error saat reset password:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan saat reset password' });
+  }
+};
+
+// Logout user (Firebase token management dilakukan di client-side)
 const logout = (req, res) => {
-  res.status(200).json({ message: 'Logout berhasil' });
+  // Tidak perlu implementasi logout di server, cukup hapus token di client
+  res.json({ message: 'Logout berhasil' });
 };
 
-// Fungsi forgot password
-const forgotPassword = (req, res) => {
-  res.status(200).json({ message: 'Fitur reset password akan datang segera' });
-};
-
-module.exports = {
-  login,
-  register,
-  logout,
-  forgotPassword,
-};
+module.exports = { register, loginWithEmailPassword, loginWithGoogle, forgotPassword, logout };

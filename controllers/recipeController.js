@@ -1,10 +1,10 @@
-const { db } = require('../config/firebase');
+const { db } = require('../config/firestoreDb.js');
 
 // Get all recipes
 const getAllRecipes = async (req, res) => {
   try {
     const recipesSnapshot = await db.collection('recipes').get();
-    const recipes = recipesSnapshot.docs.map(doc => doc.data());
+    const recipes = recipesSnapshot.docs.map((doc) => doc.data());
     res.json(recipes);
   } catch (error) {
     console.error('Error fetching recipes:', error);

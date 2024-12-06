@@ -1,4 +1,4 @@
-const { db } = require('../config/firebase');
+const { db } = require('../config/firestoreDb.js');
 
 // Get recommendations
 exports.getRecommendations = async (req, res) => {
