@@ -1,12 +1,19 @@
-const db = require('../config/firebase');  // Pastikan Firebase dikonfigurasi dengan benar
+const { Firestore } = require('@google-cloud/firestore');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+
+// Inisialisasi Firestore dengan kredensial Google Cloud
+const db = new Firestore({
+  projectId: 'ingrevia', // Ganti dengan ID proyek Google Cloud Anda
+  keyFilename: path.resolve(__dirname, '../service.json'), // Path ke file service account key JSON
+});
 
 // Fungsi register user
 const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
-    
+
     // Mengecek apakah email sudah terdaftar
     const userSnapshot = await db.collection('users').where('email', '==', email).get();
     if (!userSnapshot.empty) {
