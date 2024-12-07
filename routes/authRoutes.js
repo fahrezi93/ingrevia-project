@@ -1,17 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { login, register, logout, forgotPassword } = require('../controllers/authController');
+const authController = require('../controllers/authController');
 
-// Login user
-router.post('/login', login);
+// Mendefinisikan rute
 
-// Register user
-router.post('/register', register);
+// Register User
+router.post('/register', authController.register);
 
-// Logout user
-router.post('/logout', logout);
+// Login via email User
+router.post('/login/email', authController.loginWithEmailPassword);
 
-// Forgot password
-router.post('/forgot-password', forgotPassword);
+// Login via Google
+router.post('/login/google', authController.loginWithGoogle);
+
+// Forget password User
+router.post('/forgot-password', authController.forgotPassword);
+
+// Logout User
+router.post('/logout', authController.logout);
 
 module.exports = router;
