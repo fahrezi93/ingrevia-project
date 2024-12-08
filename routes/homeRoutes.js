@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticate = require('../middleware/authenticate');
-const { getRecommendations, search, getCategories, discover } = require('../controllers/homeController'); // Mengimpor semua fungsi
+const { getRecommendations, search, getCategories, discover } = require('../controllers/homeController');
 
 // Home endpoints
 router.get('/recommendations', getRecommendations);

@@ -98,14 +98,15 @@ const loginWithGoogle = async (req, res) => {
 };
 
 // Forgot password
-const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
+const admin = require('firebase-admin');
 
-    const resetLink = await admin.auth().generatePasswordResetLink(email);
-    res.json({ message: `Link reset password telah dikirim ke ${email}`, resetLink });
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    await admin.auth().generatePasswordResetLink(email);
+    res.status(200).json({ message: 'Password reset email sent successfully' });
   } catch (error) {
-    console.error('Error saat reset password:', error);
+    console.error("Error during password reset:", error);
     res.status(500).json({ error: 'Terjadi kesalahan saat reset password' });
   }
 };

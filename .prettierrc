@@ -1,0 +1,10 @@
+{
+    "singleQuote": false,  // Gunakan tanda kutip ganda untuk JSON
+    "tabWidth": 2,         // Gunakan 2 spasi untuk indentation
+    "trailingComma": "none", // Jangan menggunakan koma di akhir elemen
+    "printWidth": 80,      // Batas panjang baris sebelum Prettier memecahnya
+    "bracketSpacing": true, // Tambahkan spasi di dalam kurung kurawal untuk objek
+    "arrowParens": "always", // Selalu gunakan tanda kurung pada fungsi panah
+    "semi": false,         // Tidak menggunakan titik koma
+    "endOfLine": "auto"    // Menyesuaikan akhir baris sesuai dengan sistem operasi
+  }
