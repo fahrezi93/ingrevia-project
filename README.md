@@ -20,3 +20,15 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 >    Method: Post
 > 5. http://localhost:5000/api/auth/logout
 >    Method: Post
+> 6. http://localhost:5000/home/recommendations
+>    Method: GET
+> 7. http://localhost:5000/home/search?query=pastasalad
+>    Method: GET
+> 6. http://localhost:5000/home/categories
+>    Method: GET
+> 6. http://localhost:5000/home/discover
+>    Method: GET
+> 6. http://localhost:5000/recipes
+>    Method: GET
+> 6. http://localhost:5000/recipes/1
+>    Method: GET
