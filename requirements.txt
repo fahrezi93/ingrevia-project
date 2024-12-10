@@ -6,4 +6,4 @@ scikit-learn
 Flask
 seaborn
 umap-learn
-
+gunicorn
