@@ -1,4 +1,4 @@
-const { db } = require('../config/firebase');  // Pastikan db diimpor dari firebase.js dengan benar
+const { db } = require('../config/firestoreDb.js');  // Pastikan db diimpor dari firebase.js dengan benar
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 

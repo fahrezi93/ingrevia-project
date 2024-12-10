@@ -4,9 +4,15 @@ const authenticate = require('../middleware/authenticate');
 const { getRecommendations, search, getCategories, discover } = require('../controllers/homeController');
 
 // Home endpoints
-router.get('/recommendations', getRecommendations);
-router.get('/search', search); // Menambahkan route search
-router.get('/categories', getCategories); // Menambahkan route getCategories
-router.get('/discover', discover); // Menambahkan route discover
+router.post('/recommendations', authenticate, getRecommendations);
+router.get('/search', authenticate, search);
+router.get('/categories', authenticate, getCategories); 
+router.get('/discover', authenticate, discover);
+
+// Error handling (optional)
+router.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).send({ error: 'Something went wrong' });
+});
 
 module.exports = router;
