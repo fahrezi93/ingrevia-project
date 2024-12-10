@@ -1,4 +1,4 @@
-const { db } = require('../config/firestoreDb.js');  // Pastikan db diimpor dari firebase.js dengan benar
+const db = require('../config/firestoreDb.js');  // Pastikan path ini benar sesuai struktur direktori Anda
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
-
+    console.log("asdasdasd");
     // Mengecek apakah email sudah terdaftar di Firestore
     const userSnapshot = await db.collection('users').where('email', '==', email).get();
     if (!userSnapshot.empty) {
@@ -98,12 +98,12 @@ const loginWithGoogle = async (req, res) => {
 
 // Forgot password
 const admin = require('firebase-admin');
-
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
-    await admin.auth().generatePasswordResetLink(email);
-    res.status(200).json({ message: 'Password reset email sent successfully' });
+    // Menghasilkan link reset password
+    const resetLink = await admin.auth().generatePasswordResetLink(email);
+    res.status(200).json({ message: 'Password reset email sent successfully', resetLink });
   } catch (error) {
     console.error("Error during password reset:", error);
     res.status(500).json({ error: 'Terjadi kesalahan saat reset password' });

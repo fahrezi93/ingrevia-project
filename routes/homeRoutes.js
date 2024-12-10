@@ -4,10 +4,10 @@ const authenticate = require('../middleware/authenticate');
 const { getRecommendations, search, getCategories, discover } = require('../controllers/homeController');
 
 // Home endpoints
-router.post('/recommendations', authenticate, getRecommendations);
-router.get('/search', authenticate, search);
-router.get('/categories', authenticate, getCategories); 
-router.get('/discover', authenticate, discover);
+router.post('/recommendations', getRecommendations); // Rekomendasi berdasarkan BMI dan TDEE
+router.post('/search', search); // Pencarian resep berdasarkan kata kunci
+router.get('/categories', getCategories); // Mendapatkan kategori resep
+router.get('/discover', discover); // Menemukan 5 resep terbaru
 
 // Error handling (optional)
 router.use((err, req, res, next) => {

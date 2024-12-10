@@ -1,4 +1,6 @@
-const { db } = require('../config/firestoreDb.js'); // Pastikan konfigurasi Firestore sudah benar
+const { db } = require('../config/firestoreDb.js');
+const admin = require('firebase-admin');
+ // Pastikan konfigurasi Firestore sudah benar
 
 // Fungsi untuk menghitung BMI
 const calculateBMI = (weight, height) => {
