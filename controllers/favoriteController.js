@@ -4,9 +4,8 @@ const db = require('../config/firestoreDb.js');
 exports.getFavorites = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // Mendapatkan koleksi 'favorites' milik user
     const snapshot = await db.collection('favorites').where('userId', '==', userId).get();
+    
     if (snapshot.empty) {
       return res.status(200).json({ success: true, data: [] });
     }
@@ -86,7 +85,7 @@ exports.getFavoriteCategories = async (req, res) => {
 
     // Ekstrak kategori resep dari data favorit
     const categories = snapshot.docs.map((doc) => doc.data().category);
-    const uniqueCategories = [...new Set(categories)];
+    const uniqueCategories = [...new Set(categories)];  // Hilangkan duplikat
 
     res.status(200).json({ success: true, data: uniqueCategories });
   } catch (error) {

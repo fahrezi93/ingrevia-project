@@ -1,10 +1,12 @@
-const admin = require('./firebaseAdmin');
+// Import modul yang diperlukan
 const { Firestore } = require('@google-cloud/firestore');
 const path = require('path');
 
+// Inisialisasi Firestore dengan kredensial dari file service account
 const db = new Firestore({
-  projectId: 'ingrevia', 
-  keyFilename: path.resolve(__dirname, './ingrevia-firebase-adminsdk-n4aon-691dee1cf8.json'),
+  projectId: 'ingrevia', // Ganti dengan ID proyek Google Cloud Anda
+  keyFilename: path.resolve(__dirname, '../service.json'), // Path ke file service account key JSON
 });
 
+// Export db agar bisa digunakan di file lain
 module.exports = db;

@@ -3,5 +3,9 @@ node_modules
 service.json
 firebaseService.json
 dockerfile
+<<<<<<< HEAD
 adsaddsa
 config/ingrevia-firebase-adminsdk-n4aon-691dee1cf8.json
+=======
+adsaddsa
+>>>>>>> 8f940c01a8aa1aa39d05eb8947a067aaa8cb41b0

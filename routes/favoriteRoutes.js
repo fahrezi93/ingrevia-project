@@ -4,7 +4,7 @@ const authenticate = require('../middleware/authenticate');
 const { addToFavorites, getFavorites, addFavorite, removeFavorite, getFavoriteCategories } = require('../controllers/favoriteController');
 
 // Mendapatkan daftar resep favorit user
-router.get('/', getFavorites);  // Hanya satu deklarasi getFavorites
+router.get('/', getFavorites); 
 
 // Menambahkan resep ke daftar favorit
 router.post('/:id', addFavorite);

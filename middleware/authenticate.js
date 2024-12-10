@@ -16,8 +16,8 @@ const authenticate = async (req, res, next) => {
     // const userRef = db.collection('users').doc(req.userId);
     // const userDoc = await userRef.get();
     // if (!userDoc.exists) return res.status(404).json({ message: 'User not found' });
-
     next();
+    next(); // Jika token valid dan user ada, lanjutkan ke route berikutnya
   } catch (error) {
     console.error('Error in authentication:', error);
     return res.status(401).json({ message: 'Invalid token' }); // Jika token tidak valid
