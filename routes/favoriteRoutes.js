@@ -3,16 +3,16 @@ const router = express.Router();
 const authenticate = require('../middleware/authenticate');
 const { addToFavorites, getFavorites, addFavorite, removeFavorite, getFavoriteCategories } = require('../controllers/favoriteController');
 
-// Mendapatkan daftar resep favorit user
-router.get('/', getFavorites); 
+// Route untuk mendapatkan daftar favorit
+router.get('/', getFavorites);
 
-// Menambahkan resep ke daftar favorit
+// Route untuk menambahkan favorit
 router.post('/:id', addFavorite);
 
-// Menghapus resep dari daftar favorit
+// Route untuk menghapus favorit
 router.delete('/:id', removeFavorite);
 
-// Mendapatkan kategori dari resep favorit
+// Route untuk mendapatkan kategori dari favorit
 router.get('/categories', getFavoriteCategories);
 
 module.exports = router;

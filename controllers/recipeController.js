@@ -1,3 +1,5 @@
+const db = require('../config/firestoreDb.js');
+
 // Get all recipes
 const getAllRecipes = async (req, res) => {
   try {

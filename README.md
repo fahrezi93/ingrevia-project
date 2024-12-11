@@ -33,3 +33,50 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 > 11. http://localhost:5000/recipes/1
 >    Method: GET
 
+
+### 1. **Register User**
+
+**URL:** `POST /auth/register`  
+**Endpoint:** [http://localhost:5000/auth/login/register]
+**Request:**
+
+```json
+{
+  "email": "user@gmail.com",
+  "name" : "newuser",
+  "password": "321"
+}
+```
+
+**Response:**
+
+```json
+{
+    "message": "User berhasil didaftarkan",
+    "userId": "SYzP5yZOcu0YyJ1hmc4J"
+}
+```
+
+### 2. **Login User Email**
+
+**URL:** `POST /auth/login-user`  
+**Endpoint:** [http://localhost:5000/auth/login/email]
+**Request:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "userpassword"
+}
+```
+
+**Response:**
+
+```json
+{
+    "message": "Login berhasil",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJHZWV4cFVTQWlkaEtqRXVnenhTZSIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsImlhdCI6MTczMzg5MjI2OCwiZXhwIjoxNzMzODk1ODY4fQ.CveHfCMNwpKGhDmtCrX2PlUbkjk6WZyBph5u_GT5M7w"
+}
+
+
+```

@@ -1,3 +1,5 @@
+const db = require('../config/firestoreDb.js');
+
 // Fungsi untuk mendapatkan rekomendasi berdasarkan popularitas
 const getPopularRecipes = async (limit = 5) => {
     try {

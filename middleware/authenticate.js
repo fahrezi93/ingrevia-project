@@ -1,33 +1,50 @@
 const admin = require('firebase-admin'); // Mengimpor Firebase Admin SDK
-const { db } = require('../config/firestoreDb.js'); // Pastikan Anda mengimpor Firestore jika dibutuhkan
+const { db } = require('../config/firestoreDb.js'); // Impor Firestore jika dibutuhkan
 
 // Middleware untuk autentikasi
 const authenticate = async (req, res, next) => {
-  // Ambil token dari header Authorization
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
-  // Jika tidak ada token, kirimkan respons 401 (Unauthorized)
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
-  }
-
   try {
+    // Ambil token dari header Authorization
+    const authorizationHeader = req.header('Authorization');
+    if (!authorizationHeader) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // Pisahkan prefix Bearer dan token
+    const token = authorizationHeader.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
     // Verifikasi ID token dengan Firebase Admin SDK
     const decodedToken = await admin.auth().verifyIdToken(token);
-    req.userId = decodedToken.uid; // Simpan userId dari token yang terverifikasi ke dalam request
 
-    // Cek apakah user ada di Firestore (opsional, jika Anda perlu memverifikasi keberadaan pengguna)
-    // const userRef = db.collection('users').doc(req.userId);
-    // const userDoc = await userRef.get();
-    // if (!userDoc.exists) {
-    //   return res.status(404).json({ message: 'User not found' });
-    // }
+    // Simpan informasi pengguna dari token yang terverifikasi
+    req.user = {
+      id: decodedToken.uid,
+      email: decodedToken.email || null,
+      name: decodedToken.name || null,
+    };
 
-    // Jika token valid, lanjutkan ke route berikutnya
+    // (Opsional) Verifikasi keberadaan user di Firestore
+    // Uncomment bagian ini jika ingin memeriksa keberadaan user di database
+    /*
+    const userRef = db.collection('users').doc(req.user.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    */
+
+    // Lanjutkan ke route berikutnya jika token valid
     next();
   } catch (error) {
     console.error('Error in authentication:', error);
-    // Menyediakan error yang lebih spesifik jika token tidak valid
+
+    // Tanggapi dengan pesan yang lebih spesifik
+    if (error.code === 'auth/id-token-expired') {
+      return res.status(401).json({ message: 'Token expired' });
+    }
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
