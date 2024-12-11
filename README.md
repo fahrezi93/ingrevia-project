@@ -2,7 +2,7 @@
 Backend API untuk aplikasi Ingrevia, We will available soon!
 
 ## Cloud Architecture
-![Ingrevia Cloud Architecture.jpg](https://github.com/fahrezi93/ingrevia-project/blob/753ed40788b479d04f082bbe1a580549c26965e3/Ingrevia%20Cloud%20Architecture.jpg)
+![Ingrevia Cloud Architecture Fixed.jpg](https://github.com/fahrezi93/ingrevia-project/blob/8671ab9d5ad51837f0a7e6956e64f2fa047d6f79/Ingrevia%20Cloud%20Architecture%20Fixed.jpg)
 
 ## URL API Machine Learning Model
 ```bash
