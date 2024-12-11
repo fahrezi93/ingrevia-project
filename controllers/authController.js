@@ -2,6 +2,8 @@ const db = require('../config/firestoreDb.js');  // Pastikan path ini benar sesu
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+console.log(' Auth Firestore db:', db);
+
 // Fungsi Register
 const register = async (req, res) => {
   try {

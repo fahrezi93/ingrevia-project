@@ -1,5 +1,8 @@
 const db = require('../config/firestoreDb.js');
 
+console.log('Favorite Firestore db:', db);
+
+
 // Mendapatkan daftar resep favorit user
 exports.getFavorites = async (req, res) => {
   try {

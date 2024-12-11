@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllRecipes, getRecipeById } = require('../controllers/recipeController');  // Memastikan kamu mengimpor fungsi yang benar
+const { getAllRecipes, getRecipeById } = require('../controllers/recipeController');
 
 // Recipe endpoints
 router.get('/', getAllRecipes);

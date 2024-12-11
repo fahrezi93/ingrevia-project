@@ -1,12 +1,16 @@
 const admin = require('firebase-admin');
 const serviceAccount = require('./service.json');
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// Inisialisasi Firebase Admin SDK
+if (admin.apps.length === 0) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 const db = admin.firestore();
 
+// Fungsi untuk memasukkan data ke Firestore
 const insertDataToFirestore = async (collectionName, dataset) => {
   try {
     if (Array.isArray(dataset)) {
@@ -27,19 +31,4 @@ const insertDataToFirestore = async (collectionName, dataset) => {
   }
 };
 
-const dataset = [
-  {
-    name: 'John Doe',
-    email: 'johndoe@example.com',
-    age: 30,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  },
-  {
-    name: 'Jane Smith',
-    email: 'janesmith@example.com',
-    age: 25,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  },
-];
-
-insertDataToFirestore('users', dataset);
+module.exports = { db, insertDataToFirestore }; // Mengekspos db dan fungsi insertDataToFirestore

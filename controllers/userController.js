@@ -1,4 +1,7 @@
 const db = require('../config/firestoreDb.js');
+
+console.log('User Firestore db:', db);
+
 // Fungsi untuk mengambil profil pengguna
 const getProfile = (req, res) => {
   // Logika untuk mendapatkan profil pengguna dari database atau Firestore
