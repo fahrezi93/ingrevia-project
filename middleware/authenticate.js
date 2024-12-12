@@ -1,52 +1,34 @@
 const admin = require('firebase-admin'); // Mengimpor Firebase Admin SDK
-const { db } = require('../config/firestoreDb.js'); // Impor Firestore jika dibutuhkan
+const db = require('../config/firestoreDb.js');
 
-// Middleware untuk autentikasi
+// Middleware untuk autentikasi pengguna
 const authenticate = async (req, res, next) => {
   try {
-    // Ambil token dari header Authorization
-    const authorizationHeader = req.header('Authorization');
-    if (!authorizationHeader) {
-      return res.status(401).json({ message: 'No token provided' });
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'Authorization header is missing or invalid.' });
     }
 
-    // Pisahkan prefix Bearer dan token
-    const token = authorizationHeader.replace('Bearer ', '');
+    const token = authHeader.split(' ')[1];
+
     if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
+      return res.status(401).json({ success: false, message: 'Token is missing.' });
     }
 
-    // Verifikasi ID token dengan Firebase Admin SDK
     const decodedToken = await admin.auth().verifyIdToken(token);
 
-    // Simpan informasi pengguna dari token yang terverifikasi
+    // Tambahkan informasi user ke dalam request
     req.user = {
-      id: decodedToken.uid,
+      id: decodedToken.uid, // Pastikan `uid` tersedia di token Firebase
       email: decodedToken.email || null,
       name: decodedToken.name || null,
     };
 
-    // (Opsional) Verifikasi keberadaan user di Firestore
-    // Uncomment bagian ini jika ingin memeriksa keberadaan user di database
-    /*
-    const userRef = db.collection('users').doc(req.user.id);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    */
-
-    // Lanjutkan ke route berikutnya jika token valid
-    next();
+    next(); // Lanjutkan ke handler berikutnya
   } catch (error) {
-    console.error('Error in authentication:', error);
-
-    // Tanggapi dengan pesan yang lebih spesifik
-    if (error.code === 'auth/id-token-expired') {
-      return res.status(401).json({ message: 'Token expired' });
-    }
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    console.error('Authentication error:', error);
+    return res.status(401).json({ success: false, message: 'Failed to authenticate token.' });
   }
 };
-
 module.exports = authenticate;

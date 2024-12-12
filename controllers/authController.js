@@ -1,35 +1,100 @@
+const { v4: uuidv4 } = require('uuid'); // Untuk membuat unique user ID
 const db = require('../config/firestoreDb.js');  // Pastikan path ini benar sesuai struktur direktori Anda
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const admin = require('firebase-admin');
 
 console.log(' Auth Firestore db:', db);
 
-// Fungsi Register
 const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
-    console.log("asdasdasd");
-    // Mengecek apakah email sudah terdaftar di Firestore
-    const userSnapshot = await db.collection('users').where('email', '==', email).get();
-    if (!userSnapshot.empty) {
-      return res.status(400).json({ error: 'Email sudah terdaftar' });
+
+    // Validasi input
+    if (!email || !password || !name) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Semua field (email, password, name) harus diisi.' 
+      });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Cek apakah email sudah terdaftar di Firebase Auth
+    try {
+      await admin.auth().getUserByEmail(email);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email sudah terdaftar.' 
+      });
+    } catch (error) {
+      // Lanjutkan jika user belum terdaftar
+      if (error.code !== 'auth/user-not-found') {
+        throw error;
+      }
+    }
 
-    // Menyimpan data user di Firestore
-    const newUserRef = await db.collection('users').add({
+    // Buat user di Firebase Authentication
+    const userRecord = await admin.auth().createUser({
       email,
-      password: hashedPassword,
+      password,
+      displayName: name,
+      emailVerified: false
+    });
+
+    const userId = userRecord.uid;
+
+    // Simpan data tambahan di Firestore
+    await db.collection('users').doc(userId).set({
+      userId,
+      email,
       name,
       createdAt: new Date(),
     });
 
-    return res.status(201).json({ message: 'User berhasil didaftarkan', userId: newUserRef.id });
+    console.log('User berhasil dibuat:', {
+      uid: userId,
+      email: email,
+      displayName: name
+    });
+
+    return res.status(201).json({ 
+      success: true,
+      message: 'User berhasil didaftarkan.',
+      data: {
+        userId,
+        email,
+        name
+      }
+    });
+
   } catch (error) {
     console.error('Error register user:', error);
-    res.status(500).json({ error: 'Terjadi kesalahan saat mendaftar user' });
+    
+    if (error.code === 'auth/email-already-exists') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email sudah terdaftar.' 
+      });
+    }
+
+    if (error.code === 'auth/invalid-email') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Format email tidak valid.' 
+      });
+    }
+
+    if (error.code === 'auth/weak-password') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Password terlalu lemah. Minimal 6 karakter.' 
+      });
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      message: 'Terjadi kesalahan saat mendaftar user.',
+      error: error.message 
+    });
   }
 };
 
@@ -99,16 +164,64 @@ const loginWithGoogle = async (req, res) => {
 };
 
 // Forgot password
-const admin = require('firebase-admin');
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
+  
   try {
-    // Menghasilkan link reset password
-    const resetLink = await admin.auth().generatePasswordResetLink(email);
-    res.status(200).json({ message: 'Password reset email sent successfully', resetLink });
+    console.log('Processing password reset for email:', email);
+
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email is required' 
+      });
+    }
+
+    // Cek apakah email terdaftar di Firebase Auth
+    try {
+      await admin.auth().getUserByEmail(email);
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        return res.status(404).json({
+          success: false,
+          message: 'Email tidak terdaftar'
+        });
+      }
+      throw error;
+    }
+
+    const actionCodeSettings = {
+      // URL yang akan dibuka setelah user klik link di email
+      url: 'https://ingrevia.firebaseapp.com', // Ganti dengan domain Firebase hosting Anda
+      handleCodeInApp: true
+    };
+
+    // Kirim email reset password menggunakan Firebase
+    await admin.auth().generatePasswordResetLink(email, actionCodeSettings);
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Link reset password telah dikirim ke email Anda. Silakan cek inbox email Anda.',
+      data: {
+        email
+      }
+    });
+
   } catch (error) {
-    console.error("Error during password reset:", error);
-    res.status(500).json({ error: 'Terjadi kesalahan saat reset password' });
+    console.error('Error in forgotPassword:', error);
+    
+    if (error.code === 'auth/invalid-email') {
+      return res.status(400).json({
+        success: false,
+        message: 'Format email tidak valid'
+      });
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      message: 'Terjadi kesalahan saat mengirim email reset password',
+      error: error.message
+    });
   }
 };
 
