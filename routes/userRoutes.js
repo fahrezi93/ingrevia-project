@@ -9,7 +9,7 @@ const {
 } = require('../controllers/userController');
 
 // User profile routes
-router.get('/profile', getProfile);
+router.post('/profile', getProfile);
 router.put('/profile', updateUserProfile);
 router.put('/profile/picture', updateProfilePicture);  // Endpoint baru khusus untuk update foto
 

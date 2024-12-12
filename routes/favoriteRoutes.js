@@ -12,6 +12,6 @@ router.post('/addfavorite', favoriteController.addFavorite);
 router.delete('/deletefavorite', favoriteController.removeFavorite);
 
 // Mendapatkan kategori dari daftar favorit
-router.get('/categories', favoriteController.getFavoriteCategories);
+router.post('/categories', favoriteController.getFavoriteCategories);
 
 module.exports = router;

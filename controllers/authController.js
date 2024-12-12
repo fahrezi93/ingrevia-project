@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { v4: uuidv4 } = require('uuid'); // Untuk membuat unique user ID
 const db = require('../config/firestoreDb.js');  // Pastikan path ini benar sesuai struktur direktori Anda
 const bcrypt = require('bcrypt');
@@ -99,6 +100,7 @@ const register = async (req, res) => {
 
 // Fungsi login dengan email dan password
 const loginWithEmailPassword = async (req, res) => {
+
   try {
     const { email, password } = req.body;
 
@@ -110,10 +112,20 @@ const loginWithEmailPassword = async (req, res) => {
     }
 
     try {
-      // Get user by email
+      // Cek apakah email terdaftar
       const userRecord = await admin.auth().getUserByEmail(email);
       
-      // Create custom token
+      // Verifikasi password menggunakan Firebase REST API
+      const response = await axios.post(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyAhf6r4vbQ5FVFX_-jQiu3lasHVdJK-1GQ`,
+        {
+          email,
+          password,
+          returnSecureToken: true
+        }
+      );
+
+      // Buat custom token
       const customToken = await admin.auth().createCustomToken(userRecord.uid);
 
       return res.status(200).json({
@@ -130,7 +142,24 @@ const loginWithEmailPassword = async (req, res) => {
       });
 
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error:', error.response?.data || error);
+      
+      if (error.code === 'auth/user-not-found') {
+        return res.status(401).json({
+          success: false,
+          message: 'Email tidak terdaftar'
+        });
+      }
+
+      // Error dari Firebase REST API
+      const errorMessage = error.response?.data?.error?.message;
+      if (errorMessage === 'INVALID_PASSWORD') {
+        return res.status(401).json({
+          success: false,
+          message: 'Password yang dimasukkan salah'
+        });
+      }
+
       return res.status(401).json({
         success: false,
         message: 'Email atau password salah'
@@ -146,7 +175,6 @@ const loginWithEmailPassword = async (req, res) => {
     });
   }
 };
-
 // Fungsi login menggunakan Google ID Token
 const loginWithGoogle = async (req, res) => {
   try {
@@ -248,7 +276,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Logout user (Firebase token management dilakukan di client-side)
+// Logout user
 const logout = async (req, res) => {
   try {
     // Ambil token dari header Authorization
@@ -260,16 +288,29 @@ const logout = async (req, res) => {
       });
     }
 
+    // Pastikan token adalah Firebase ID token yang valid
     const token = authHeader.split(' ')[1]; // Ambil token dari format "Bearer <token>"
     
-    // Revoke token di Firebase
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    await admin.auth().revokeRefreshTokens(decodedToken.uid);
+    try {
+      // Verifikasi token terlebih dahulu
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      
+      // Jika verifikasi berhasil, revoke refresh tokens
+      await admin.auth().revokeRefreshTokens(decodedToken.uid);
 
-    res.status(200).json({ 
-      success: true,
-      message: 'Logout berhasil' 
-    });
+      res.status(200).json({ 
+        success: true,
+        message: 'Logout berhasil' 
+      });
+    } catch (tokenError) {
+      console.error('Token verification error:', tokenError);
+      return res.status(401).json({
+        success: false,
+        message: 'Token tidak valid',
+        error: tokenError.message
+      });
+    }
+
   } catch (error) {
     console.error('Error saat logout:', error);
     res.status(500).json({
