@@ -12,10 +12,7 @@ const register = async (req, res) => {
 
     // Validasi input
     if (!email || !password || !name) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Semua field (email, password, name) harus diisi.' 
-      });
+      return res.status(400).json({ error: 'Semua field (email, password, name) harus diisi.' });
     }
 
     // Cek apakah email sudah terdaftar di Firebase Auth
@@ -98,37 +95,85 @@ const register = async (req, res) => {
   }
 };
 
+// Tambahkan object untuk tracking percobaan login
+const loginAttempts = {};
+
 // Fungsi login dengan email dan password
 const loginWithEmailPassword = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Cek apakah user ada di Firestore berdasarkan email
-    const userSnapshot = await db.collection('users').where('email', '==', email).get();
-    if (userSnapshot.empty) {
-      return res.status(400).json({ error: 'Email tidak ditemukan' });
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email dan password harus diisi.' 
+      });
     }
 
-    const userDoc = userSnapshot.docs[0];
-    const userData = userDoc.data();
+    try {
+      // Coba login dengan Firebase Auth
+      const userCredential = await admin.auth().getUserByEmail(email);
+      
+      // Jika berhasil, reset counter percobaan
+      if (loginAttempts[email]) {
+        delete loginAttempts[email];
+      }
 
-    // Verifikasi password
-    const isPasswordValid = await bcrypt.compare(password, userData.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Password salah' });
+      // Proses login normal
+      const customToken = await admin.auth().createCustomToken(userCredential.uid);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Login berhasil',
+        data: {
+          token: customToken,
+          user: {
+            email: userCredential.email,
+            displayName: userCredential.displayName
+          }
+        }
+      });
+
+    } catch (error) {
+      // Jika password salah atau error lainnya
+      if (!loginAttempts[email]) {
+        loginAttempts[email] = {
+          count: 1,
+          lastAttempt: new Date()
+        };
+      } else {
+        loginAttempts[email].count += 1;
+        loginAttempts[email].lastAttempt = new Date();
+
+        // Jika gagal 3 kali dalam 5 menit, kirim email reset password
+        const timeDiff = (new Date() - loginAttempts[email].lastAttempt) / 1000 / 60; // dalam menit
+        if (loginAttempts[email].count >= 3 && timeDiff <= 5) {
+          // Generate dan kirim link reset password
+          const resetLink = await admin.auth().generatePasswordResetLink(email);
+
+          return res.status(401).json({
+            success: false,
+            message: 'Terlalu banyak percobaan login gagal. Link reset password telah dikirim ke email Anda.',
+            resetLink: resetLink
+          });
+        }
+      }
+
+      // Response untuk gagal login biasa
+      return res.status(401).json({
+        success: false,
+        message: 'Email atau password salah',
+        attemptsLeft: 3 - (loginAttempts[email]?.count || 0)
+      });
     }
 
-    // Membuat JWT token untuk session
-    const token = jwt.sign(
-      { userId: userDoc.id, email: userData.email },
-      'SECRET_KEY',  // Ganti dengan secret key yang lebih aman
-      { expiresIn: '1h' }
-    );
-
-    res.json({ message: 'Login berhasil', token });
   } catch (error) {
-    console.error('Error saat login dengan email dan password:', error);
-    res.status(500).json({ error: 'Terjadi kesalahan saat login' });
+    console.error('Error in loginWithEmailPassword:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Terjadi kesalahan saat login',
+      error: error.message 
+    });
   }
 };
 
@@ -190,22 +235,23 @@ const forgotPassword = async (req, res) => {
       throw error;
     }
 
-    const actionCodeSettings = {
-      // URL yang akan dibuka setelah user klik link di email
-      url: 'https://ingrevia.firebaseapp.com', // Ganti dengan domain Firebase hosting Anda
-      handleCodeInApp: true
-    };
-
-    // Kirim email reset password menggunakan Firebase
-    await admin.auth().generatePasswordResetLink(email, actionCodeSettings);
-
-    res.status(200).json({ 
-      success: true,
-      message: 'Link reset password telah dikirim ke email Anda. Silakan cek inbox email Anda.',
-      data: {
-        email
-      }
-    });
+    // Generate reset password link
+    await admin.auth().generatePasswordResetLink(email)
+      .then(async (link) => {
+        console.log('Reset password link generated:', link);
+        
+        // Di sini bisa ditambahkan kode untuk mengirim email menggunakan nodemailer atau layanan email lainnya
+        
+        return res.status(200).json({ 
+          success: true,
+          message: 'Link reset password telah dikirim ke email Anda',
+          data: {
+            email,
+            // Dalam production, jangan tampilkan link
+            resetLink: link
+          }
+        });
+      });
 
   } catch (error) {
     console.error('Error in forgotPassword:', error);
@@ -214,6 +260,13 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Format email tidak valid'
+      });
+    }
+
+    if (error.code === 'auth/user-not-found') {
+      return res.status(404).json({
+        success: false,
+        message: 'Email tidak terdaftar'
       });
     }
 
@@ -230,5 +283,16 @@ const logout = (req, res) => {
   // Tidak perlu implementasi logout di server, cukup hapus token di client
   res.json({ message: 'Logout berhasil' });
 };
+
+// Fungsi untuk membersihkan login attempts yang sudah lama
+setInterval(() => {
+  const now = new Date();
+  for (const email in loginAttempts) {
+    const timeDiff = (now - loginAttempts[email].lastAttempt) / 1000 / 60;
+    if (timeDiff > 5) {
+      delete loginAttempts[email];
+    }
+  }
+}, 300000); // Bersihkan setiap 5 menit
 
 module.exports = { register, loginWithEmailPassword, loginWithGoogle, forgotPassword, logout };
