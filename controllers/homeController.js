@@ -1,4 +1,5 @@
 const db = require('../config/firestoreDb.js');
+const axios = require('axios');
 
 // Fungsi untuk mendapatkan rekomendasi berdasarkan popularitas
 const getPopularRecipes = async (limit = 5) => {
@@ -26,174 +27,261 @@ const getPopularRecipes = async (limit = 5) => {
     }
 };
 
-// Get recommendations
+// Fungsi untuk mendapatkan rekomendasi dari ML model
 exports.getRecommendations = async (req, res) => {
     try {
-        // Ambil rekomendasi berdasarkan popularitas
-        const popularRecipes = await getPopularRecipes();
+        const { weight, height, age, gender, activity_level, liked_recipe_indices } = req.body;
 
-        // Kirimkan respons dengan data rekomendasi
+        // Validasi input
+        if (!weight || !height || !age || gender === undefined || !activity_level) {
+            return res.status(400).json({
+                success: false,
+                message: 'Semua field (weight, height, age, gender, activity_level) harus diisi'
+            });
+        }
+
+        // Ambil 50 resep dari Firestore terlebih dahulu
+        const recipesRef = db.collection('recipes');
+        const snapshot = await recipesRef.limit(50).get();
+        
+        const recipes = [];
+        snapshot.forEach(doc => {
+            recipes.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        // Setelah mendapatkan resep, kirim ke ML API untuk rekomendasi
+        const mlRequestData = {
+            weight: Number(weight),
+            height: Number(height),
+            age: Number(age),
+            gender: Number(gender),
+            activity_level: Number(activity_level),
+            liked_recipe_indices: liked_recipe_indices || [],
+            recipes: recipes // Kirim resep yang sudah diambil
+        };
+
+        // Hit ML API
+        const mlResponse = await axios.post(
+            'https://machine-learning-1042086567112.asia-southeast1.run.app/api/recommend',
+            mlRequestData
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Rekomendasi resep berhasil didapatkan',
+            data: {
+                user_metrics: {
+                    weight,
+                    height,
+                    age,
+                    gender,
+                    activity_level
+                },
+                recipes: recipes, // 50 resep yang diambil
+                recommendations: mlResponse.data // Hasil rekomendasi dari ML
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting recommendations:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Gagal mendapatkan rekomendasi',
+            error: error.message
+        });
+    }
+};
+
+// Search recipes by ingredients
+exports.searchByIngredients = async (req, res) => {
+    const { query } = req.body;
+
+    if (!query) {
+        return res.status(400).json({
+            success: false,
+            message: 'Query parameter is required'
+        });
+    }
+
+    try {
+        const searchIngredients = query.toLowerCase().split(',').map(ing => ing.trim());
+        const recipesRef = db.collection('recipes');
+        const snapshot = await recipesRef.limit(50).get();  // Batasi 50 resep
+
+        let recipes = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.ingredients && Array.isArray(data.ingredients)) {
+                const recipeIngredients = data.ingredients.map(ing => ing.toLowerCase());
+                const hasAllIngredients = searchIngredients.every(searchIng => 
+                    recipeIngredients.some(recipeIng => recipeIng.includes(searchIng))
+                );
+
+                if (hasAllIngredients) {
+                    recipes.push({ id: doc.id, ...data });
+                }
+            }
+        });
+
+        // Batasi hasil pencarian jika masih melebihi 50
+        if (recipes.length > 50) {
+            recipes = recipes.slice(0, 50);
+        }
+
+        if (recipes.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No recipes found containing all the specified ingredients'
+            });
+        }
+
         res.status(200).json({
-            message: 'Recommendations fetched successfully',
-            data: popularRecipes,
+            success: true,
+            data: recipes
         });
     } catch (error) {
+        console.error('Search error:', error);
         res.status(500).json({
-            message: 'Error fetching recommendations',
-            error: error.message,
+            success: false,
+            message: 'Internal server error'
         });
     }
 };
 
-// Search recipes
-exports.search = async (req, res) => {
-    const { query } = req.query; // Mengambil query parameter dari URL
+// Search recipes by title
+exports.searchByTitle = async (req, res) => {
+    const { query } = req.body;
 
     if (!query) {
-        return res.status(400).send('Query parameter is required');
+        return res.status(400).json({
+            success: false,
+            message: 'Query parameter is required'
+        });
     }
 
     try {
-        // Mengambil resep berdasarkan query pencarian
         const recipesRef = db.collection('recipes');
-        const snapshot = await recipesRef
-            .where('title', '>=', query)
-            .where('title', '<=', query + '\uf8ff') // Pencarian di Firestore untuk matching
-            .get();
+        const snapshot = await recipesRef.limit(50).get();  // Batasi 50 resep
 
         let recipes = [];
         snapshot.forEach(doc => {
-            recipes.push({ id: doc.id, ...doc.data() });
+            const recipeData = doc.data();
+            if (recipeData.title && 
+                recipeData.title.toLowerCase().includes(query.toLowerCase())) {
+                recipes.push({ id: doc.id, ...recipeData });
+            }
         });
 
-        if (recipes.length === 0) {
-            return res.status(404).send('No recipes found');
+        // Batasi hasil pencarian jika masih melebihi 50
+        if (recipes.length > 50) {
+            recipes = recipes.slice(0, 50);
         }
 
-        // Kirimkan hasil pencarian resep
-        res.status(200).send(recipes);
-    } catch (error) {
-        console.error('Search error:', error);
-        res.status(500).send('Internal server error');
-    }
-};
+        if (recipes.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No recipes found with the given title'
+            });
+        }
 
-exports.search = async (req, res) => {
-    const { query } = req.query; // Mengambil query parameter dari URL
-
-    if (!query) {
-        return res.status(400).send('Query parameter is required');
-    }
-
-    try {
-        // Mengambil resep berdasarkan query pencarian di ingredients
-        const recipesRef = db.collection('recipes');
-        const snapshot = await recipesRef
-            .where('ingredients', 'array-contains', query) // Menggunakan Firestore "array-contains"
-            .get();
-
-        let recipes = [];
-        snapshot.forEach(doc => {
-            recipes.push({ id: doc.id, ...doc.data() });
+        res.status(200).json({
+            success: true,
+            data: recipes
         });
-
-        if (recipes.length === 0) {
-            return res.status(404).send('No recipes found for the given ingredient');
-        }
-
-        // Kirimkan hasil pencarian resep berdasarkan ingredients
-        res.status(200).send(recipes);
     } catch (error) {
         console.error('Search error:', error);
-        res.status(500).send('Internal server error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
     }
 };
-
 
 // Get categories
 exports.getCategories = async (req, res) => {
     try {
-      const query = req.query.query;
-      if (!query) {
-        // Jika tidak ada query, kembalikan semua kategori yang terorganisir
-        const categories = {
-          protein: [
-            'Chicken', 'Beef', 'Lamb', 'Shrimp', 'Squid', 'Crab', 
-            'Tofu', 'Tempe', 'Egg', 'Fish'
-          ],
-          carbs: [
-            'Oat', 'Rice', 'Corn', 'Potato', 'Cassava', 
-            'Bread', 'Flour', 'Sago'
-          ],
-          vegetables: [
-            'Spinach', 'Broccoli', 'Carrot', 'Bean', 'Tomato',
-            'Cucumber', 'Cabbage', 'Eggplant'
-          ],
-          dairy_and_condiments: [
-            'Milk', 'Cheese', 'Butter', 'Margarine', 'Yogurt',
-            'Mayonnaise', 'Soy sauce', 'Oyster sauce', 'Chili',
-            'Coconut milk', 'Vinegar', 'Shrimp paste'
-          ],
-          spices_and_herbs: [
-            'Garlic', 'Onion', 'Chili', 'Curry', 'Coriander',
-            'Lemongrass', 'Ginger'
-          ]
-        };
-
-        return res.status(200).json({ 
-          success: true, 
-          data: categories 
-        });
-      }
-  
-      // Split query menjadi array dan bersihkan dari spasi
-      const searchTerms = query.split(',').map(term => term.trim());
-      
-      const recipesRef = db.collection('recipes');
-      const snapshot = await recipesRef.get();
-  
-      if (snapshot.empty) {
-        return res.status(404).json({ 
-          success: false, 
-          message: 'No recipes found' 
-        });
-      }
-  
-      const matchingRecipes = [];
-  
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        // Periksa apakah resep memiliki setidaknya satu dari searchTerms
-        const hasMatchingCategory = Array.isArray(data.category) && 
-          searchTerms.some(term => 
-            data.category.some(cat => 
-              cat.toLowerCase().includes(term.toLowerCase())
-            )
-          );
+        const { query } = req.body;
         
-        const hasMatchingIngredient = Array.isArray(data.ingredients) && 
-          searchTerms.some(term => 
-            data.ingredients.some(ing => 
-              ing.toLowerCase().includes(term.toLowerCase())
-            )
-          );
+        if (!query) {
+            // Jika tidak ada query, kembalikan semua kategori yang terorganisir
+            const categories = {
+                protein: [
+                    'Chicken', 'Beef', 'Lamb', 'Shrimp', 'Squid', 'Crab', 
+                    'Tofu', 'Tempe', 'Egg', 'Fish'
+                ],
+                carbs: [
+                    'Oat', 'Rice', 'Corn', 'Potato', 'Cassava', 
+                    'Bread', 'Flour', 'Sago'
+                ],
+                vegetables: [
+                    'Spinach', 'Broccoli', 'Carrot', 'Bean', 'Tomato',
+                    'Cucumber', 'Cabbage', 'Eggplant'
+                ],
+                dairy_and_condiments: [
+                    'Milk', 'Cheese', 'Butter', 'Margarine', 'Yogurt',
+                    'Mayonnaise', 'Soy sauce', 'Oyster sauce', 'Chili',
+                    'Coconut milk', 'Vinegar', 'Shrimp paste'
+                ],
+                spices_and_herbs: [
+                    'Garlic', 'Onion', 'Chili', 'Curry', 'Coriander',
+                    'Lemongrass', 'Ginger'
+                ]
+            };
 
-        if (hasMatchingCategory || hasMatchingIngredient) {
-          matchingRecipes.push({ id: doc.id, ...data });
+            return res.status(200).json({ 
+                success: true, 
+                data: categories 
+            });
         }
-      });
+
+        // Split query menjadi array dan bersihkan dari spasi
+        const searchTerms = query.split(',').map(term => term.trim());
+        
+        const recipesRef = db.collection('recipes');
+        const snapshot = await recipesRef.limit(50).get();
   
-      if (matchingRecipes.length === 0) {
-        return res.status(404).json({ 
-          success: false, 
-          message: `No recipes found for categories: ${searchTerms.join(', ')}` 
+        if (snapshot.empty) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No recipes found' 
+            });
+        }
+  
+        const matchingRecipes = [];
+  
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            
+            // Periksa field 'categories' bukan 'category'
+            const hasMatchingCategory = Array.isArray(data.categories) && 
+                searchTerms.some(term => 
+                    data.categories.some(cat => 
+                        cat.toLowerCase().includes(term.toLowerCase())
+                    )
+                );
+
+            if (hasMatchingCategory) {
+                matchingRecipes.push({ id: doc.id, ...data });
+            }
         });
-      }
   
-      res.status(200).json({ success: true, data: matchingRecipes });
+        if (matchingRecipes.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: `No recipes found for categories: ${searchTerms.join(', ')}` 
+            });
+        }
+  
+        res.status(200).json({ success: true, data: matchingRecipes });
     } catch (error) {
-      console.error('Error getting categories with multiple terms:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+        console.error('Error getting categories:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
     }
 };
   
@@ -205,7 +293,7 @@ exports.discover = async (req, res) => {
         const recipesRef = db.collection('recipes');
         const snapshot = await recipesRef
             .orderBy('rating', 'desc') // Mengurutkan berdasarkan rating tertinggi
-            .limit(5) // Ambil 5 resep dengan rating tertinggi
+            .limit(50) // Ambil 5 resep dengan rating tertinggi
             .get();
 
         let recipes = [];

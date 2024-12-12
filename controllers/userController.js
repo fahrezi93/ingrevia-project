@@ -3,7 +3,7 @@ const db = require('../config/firestoreDb.js');
 // Fungsi untuk mengambil profil pengguna
 const getProfile = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId; // Menggunakan ID dari token JWT jika tersedia
+    const userId = req.user?.id || req.body.userId; // Hanya menggunakan ID dari token JWT atau body
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized: User ID is required' });
     }

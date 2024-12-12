@@ -3,7 +3,9 @@ const db = require('../config/firestoreDb.js');
 // Get all recipes
 const getAllRecipes = async (req, res) => {
   try {
-    const recipesSnapshot = await db.collection('recipes').get();
+    const recipesSnapshot = await db.collection('recipes')
+      .limit(50)  // Batasi 50 resep
+      .get();
     const recipes = recipesSnapshot.docs.map((doc) => doc.data());
     res.json(recipes);
   } catch (error) {

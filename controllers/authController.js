@@ -3,9 +3,11 @@ const db = require('../config/firestoreDb.js');  // Pastikan path ini benar sesu
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const admin = require('firebase-admin');
+const axios = require('axios');
 
 console.log(' Auth Firestore db:', db);
 
+//register user
 const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
@@ -95,9 +97,6 @@ const register = async (req, res) => {
   }
 };
 
-// Tambahkan object untuk tracking percobaan login
-const loginAttempts = {};
-
 // Fungsi login dengan email dan password
 const loginWithEmailPassword = async (req, res) => {
   try {
@@ -111,64 +110,35 @@ const loginWithEmailPassword = async (req, res) => {
     }
 
     try {
-      // Coba login dengan Firebase Auth
-      const userCredential = await admin.auth().getUserByEmail(email);
+      // Get user by email
+      const userRecord = await admin.auth().getUserByEmail(email);
       
-      // Jika berhasil, reset counter percobaan
-      if (loginAttempts[email]) {
-        delete loginAttempts[email];
-      }
+      // Create custom token
+      const customToken = await admin.auth().createCustomToken(userRecord.uid);
 
-      // Proses login normal
-      const customToken = await admin.auth().createCustomToken(userCredential.uid);
-      
       return res.status(200).json({
         success: true,
         message: 'Login berhasil',
         data: {
           token: customToken,
           user: {
-            email: userCredential.email,
-            displayName: userCredential.displayName
+            userId: userRecord.uid,
+            email: userRecord.email,
+            displayName: userRecord.displayName
           }
         }
       });
 
     } catch (error) {
-      // Jika password salah atau error lainnya
-      if (!loginAttempts[email]) {
-        loginAttempts[email] = {
-          count: 1,
-          lastAttempt: new Date()
-        };
-      } else {
-        loginAttempts[email].count += 1;
-        loginAttempts[email].lastAttempt = new Date();
-
-        // Jika gagal 3 kali dalam 5 menit, kirim email reset password
-        const timeDiff = (new Date() - loginAttempts[email].lastAttempt) / 1000 / 60; // dalam menit
-        if (loginAttempts[email].count >= 3 && timeDiff <= 5) {
-          // Generate dan kirim link reset password
-          const resetLink = await admin.auth().generatePasswordResetLink(email);
-
-          return res.status(401).json({
-            success: false,
-            message: 'Terlalu banyak percobaan login gagal. Link reset password telah dikirim ke email Anda.',
-            resetLink: resetLink
-          });
-        }
-      }
-
-      // Response untuk gagal login biasa
+      console.error('Login error:', error);
       return res.status(401).json({
         success: false,
-        message: 'Email atau password salah',
-        attemptsLeft: 3 - (loginAttempts[email]?.count || 0)
+        message: 'Email atau password salah'
       });
     }
 
   } catch (error) {
-    console.error('Error in loginWithEmailPassword:', error);
+    console.error('Server error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Terjadi kesalahan saat login',
@@ -279,20 +249,35 @@ const forgotPassword = async (req, res) => {
 };
 
 // Logout user (Firebase token management dilakukan di client-side)
-const logout = (req, res) => {
-  // Tidak perlu implementasi logout di server, cukup hapus token di client
-  res.json({ message: 'Logout berhasil' });
-};
-
-// Fungsi untuk membersihkan login attempts yang sudah lama
-setInterval(() => {
-  const now = new Date();
-  for (const email in loginAttempts) {
-    const timeDiff = (now - loginAttempts[email].lastAttempt) / 1000 / 60;
-    if (timeDiff > 5) {
-      delete loginAttempts[email];
+const logout = async (req, res) => {
+  try {
+    // Ambil token dari header Authorization
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token tidak ditemukan'
+      });
     }
+
+    const token = authHeader.split(' ')[1]; // Ambil token dari format "Bearer <token>"
+    
+    // Revoke token di Firebase
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    await admin.auth().revokeRefreshTokens(decodedToken.uid);
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Logout berhasil' 
+    });
+  } catch (error) {
+    console.error('Error saat logout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan saat logout',
+      error: error.message
+    });
   }
-}, 300000); // Bersihkan setiap 5 menit
+};
 
 module.exports = { register, loginWithEmailPassword, loginWithGoogle, forgotPassword, logout };
