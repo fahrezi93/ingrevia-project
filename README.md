@@ -9,10 +9,18 @@ Backend API untuk aplikasi Ingrevia, We will available soon!
 https://machine-learning-1042086567112.asia-southeast1.run.app
 ```
 
+## URL API Backend
+```bash
+https://backend-ingrevia-1042086567112.asia-southeast1.run.app
+```
+    
+## API Documentation
+
 ### 1. **Register User**
 
 **URL:** `POST /auth/register`  
 **Endpoint:** [http://localhost:5000/auth/login/register]
+
 **Request:**
 
 ```json
@@ -36,6 +44,7 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
     }
 }
 ```
+
 **Response Gagal:**
 
 ```json
@@ -67,7 +76,7 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
     "success": true,
     "message": "Login berhasil",
     "data": {
- o       "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsImlhdCI6MTczNDAxMzM2MSwiZXhwIjoxNzM0MDE2OTYxLCJpc3MiOiJmaXJlYmFzZS1hZG1pbnNkay1uNGFvbkBpbmdyZXZpYS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6ImZpcmViYXNlLWFkbWluc2RrLW40YW9uQGluZ3JldmlhLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwidWlkIjoidm8zb0ZiYWZhQ2cydnlPT1RBNHJTSGExdUhrMSJ9.J-CWFRgeWQVKWn3hEc2wPr4eOqhdbu2xwMBxjqgT7nzJwe0aHdXpa5GkamdcFiVrBUjRd_IHCfX33sxMEvSA3pcflpDQf7LLO6hXlalIJaMNy-fZaNBJB71AM2x2IwSIGuwegG1y2C_eEoWo8DFGQWF7zKMUZCd3_hVfbCF6_H7OwN3r7ZkEwBuQEWO_wmWtvicDCYAebKldLBfQ_uWvHm2EcqvqKO1Zz_K0COev4VzS4XEn2FGYknFoR5cwJyyZzieiMMHCWkBgM17NC9LDTpMSD_yH-oitJy57wWl3H2iuwxQjPattkSu-DjjnPIebq9qla0apoa7r9h1_7f5JcA",
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsImlhdCI6MTczNDAxMzM2MSwiZXhwIjoxNzM0MDE2OTYxLCJpc3MiOiJmaXJlYmFzZS1hZG1pbnNkay1uNGFvbkBpbmdyZXZpYS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6ImZpcmViYXNlLWFkbWluc2RrLW40YW9uQGluZ3JldmlhLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwidWlkIjoidm8zb0ZiYWZhQ2cydnlPT1RBNHJTSGExdUhrMSJ9.J-CWFRgeWQVKWn3hEc2wPr4eOqhdbu2xwMBxjqgT7nzJwe0aHdXpa5GkamdcFiVrBUjRd_IHCfX33sxMEvSA3pcflpDQf7LLO6hXlalIJaMNy-fZaNBJB71AM2x2IwSIGuwegG1y2C_eEoWo8DFGQWF7zKMUZCd3_hVfbCF6_H7OwN3r7ZkEwBuQEWO_wmWtvicDCYAebKldLBfQ_uWvHm2EcqvqKO1Zz_K0COev4VzS4XEn2FGYknFoR5cwJyyZzieiMMHCWkBgM17NC9LDTpMSD_yH-oitJy57wWl3H2iuwxQjPattkSu-DjjnPIebq9qla0apoa7r9h1_7f5JcA",
         "user": {
             "email": "mohfahrezi93@gmail.com",
             "displayName": "Fahrezi"
@@ -98,7 +107,7 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 }
 ```
 
-**Response:**
+**Response Berhasil:**
 
 ```json
 {
@@ -132,7 +141,7 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 }
 ``` 
 
-**Response:**
+**Response Berhasil:**
 
 ```json
 {
@@ -297,7 +306,14 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 **Request:**
 
 ```json
-{}
+{
+    "weight": 70,
+    "height": 175,
+    "age": 30,
+    "gender": 1,
+    "activity_level": 3,
+    "liked_recipe_indices": []
+}
 ```
 # 10. **Search By Ingredients**
 
