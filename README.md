@@ -2,7 +2,7 @@
 Backend API untuk aplikasi Ingrevia, We will available soon!
 
 ## Cloud Architecture
-![Ingrevia Cloud Architecture Fixed.jpg](https://github.com/fahrezi93/ingrevia-project/blob/db41ff0637a2dc0a5dfa0565bd9388723ffd50b2/Ingrevia%20Cloud%20Architecture%20Fixed%20(2).jpg)
+![Ingrevia Cloud Architecture Fixed.jpg](https://github.com/fahrezi93/ingrevia-project/blob/8671ab9d5ad51837f0a7e6956e64f2fa047d6f79/Ingrevia%20Cloud%20Architecture%20Fixed.jpg)
 
 ## URL API Machine Learning Model
 ```bash
@@ -35,8 +35,10 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
         "name": "contohi"
     }
 }
-
+```
 **Response Gagal:**
+
+```json
 {
     "success": false,
     "message": "Email sudah terdaftar."
@@ -65,7 +67,7 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
     "success": true,
     "message": "Login berhasil",
     "data": {
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsImlhdCI6MTczNDAxMzM2MSwiZXhwIjoxNzM0MDE2OTYxLCJpc3MiOiJmaXJlYmFzZS1hZG1pbnNkay1uNGFvbkBpbmdyZXZpYS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6ImZpcmViYXNlLWFkbWluc2RrLW40YW9uQGluZ3JldmlhLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwidWlkIjoidm8zb0ZiYWZhQ2cydnlPT1RBNHJTSGExdUhrMSJ9.J-CWFRgeWQVKWn3hEc2wPr4eOqhdbu2xwMBxjqgT7nzJwe0aHdXpa5GkamdcFiVrBUjRd_IHCfX33sxMEvSA3pcflpDQf7LLO6hXlalIJaMNy-fZaNBJB71AM2x2IwSIGuwegG1y2C_eEoWo8DFGQWF7zKMUZCd3_hVfbCF6_H7OwN3r7ZkEwBuQEWO_wmWtvicDCYAebKldLBfQ_uWvHm2EcqvqKO1Zz_K0COev4VzS4XEn2FGYknFoR5cwJyyZzieiMMHCWkBgM17NC9LDTpMSD_yH-oitJy57wWl3H2iuwxQjPattkSu-DjjnPIebq9qla0apoa7r9h1_7f5JcA",
+ o       "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsImlhdCI6MTczNDAxMzM2MSwiZXhwIjoxNzM0MDE2OTYxLCJpc3MiOiJmaXJlYmFzZS1hZG1pbnNkay1uNGFvbkBpbmdyZXZpYS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6ImZpcmViYXNlLWFkbWluc2RrLW40YW9uQGluZ3JldmlhLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwidWlkIjoidm8zb0ZiYWZhQ2cydnlPT1RBNHJTSGExdUhrMSJ9.J-CWFRgeWQVKWn3hEc2wPr4eOqhdbu2xwMBxjqgT7nzJwe0aHdXpa5GkamdcFiVrBUjRd_IHCfX33sxMEvSA3pcflpDQf7LLO6hXlalIJaMNy-fZaNBJB71AM2x2IwSIGuwegG1y2C_eEoWo8DFGQWF7zKMUZCd3_hVfbCF6_H7OwN3r7ZkEwBuQEWO_wmWtvicDCYAebKldLBfQ_uWvHm2EcqvqKO1Zz_K0COev4VzS4XEn2FGYknFoR5cwJyyZzieiMMHCWkBgM17NC9LDTpMSD_yH-oitJy57wWl3H2iuwxQjPattkSu-DjjnPIebq9qla0apoa7r9h1_7f5JcA",
         "user": {
             "email": "mohfahrezi93@gmail.com",
             "displayName": "Fahrezi"
@@ -83,19 +85,10 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 }
 ```
 
-**Response Gagal 3 kali percobaan login dalam 5 menit:**
-```json
-{
-    "success": false,
-    "message": "Terlalu banyak percobaan login gagal. Link reset password telah dikirim ke email Anda.",
-    "resetLink": "https://ingrevia.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=DQeXvpFY26NnN5MmWVCKI0emB5ZskdnXNVSX-aCXsjIAAAGTu0aq6w&apiKey=AIzaSyAhf6r4vbQ5FVFX_-jQiu3lasHVdJK-1GQ&lang=en"
-}
-  
-```
 ## 3. **Forget Password**
 
-**URL:** `POST /auth/forget-password`  
-**Endpoint:** [http://localhost:5000/auth/forget-password]
+**URL:** `POST /auth/forgot-password`  
+**Endpoint:** [http://localhost:5000/auth/forgot-password]
 
 **Request:**
 
@@ -185,10 +178,10 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
     "message": "Logout gagal"
 }
 ```
-## 6. **Get User**
+## 6. **Post User Profile**
 
-**URL:** `GET /home/user`  
-**Endpoint:** [http://localhost:5000/home/user]
+**URL:** `POST /user/profile`  
+**Endpoint:** [http://localhost:5000/user/profile]
 
 **Request:**
 
@@ -227,8 +220,8 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 
 # 7. **Update User**
 
-**URL:** `PUT /home/user`  
-**Endpoint:** [http://localhost:5000/home/user]
+**URL:** `PUT /user/profile`  
+**Endpoint:** [http://localhost:5000/user/profile]
 
 **Request:**
 
@@ -263,8 +256,8 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 ```
 # 8. **Update Profile Picture**
 
-**URL:** `PUT /home/user/profile-pic`  
-**Endpoint:** [http://localhost:5000/home/user/profile-pic]
+**URL:** `PUT /user/profile/picture`  
+**Endpoint:** [http://localhost:5000/user/profile/picture]
 
 **Request:**
 
@@ -296,9 +289,9 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
     "message": "User not found"
 }
 ```
-# 9. **Get Recommendations**
+# 9. **POST Recommendations**
 
-**URL:** `GET /home/recommendations`  
+**URL:** `POST /home/recommendations`  
 **Endpoint:** [http://localhost:5000/home/recommendations]
 
 **Request:**
@@ -306,10 +299,10 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 ```json
 {}
 ```
-# 10. **Search**
+# 10. **Search By Ingredients**
 
-**URL:** `GET /home/search`  
-**Endpoint:** [http://localhost:5000/home/search?query=Sugar]
+**URL:** `POST /home/search/ingredients`  
+**Endpoint:** [http://localhost:5000/home/search/ingredients]
 
 **Request:**
 
@@ -336,7 +329,20 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
 }
 ```
 
-# 11. **Get Categories**
+# 11. **Search By Title**   
+
+**URL:** `POST /home/search/title`  
+**Endpoint:** [http://localhost:5000/home/search/title]
+
+**Request:**
+
+```json
+{
+    "query": "Chicken"
+}
+```
+
+# 12. **Get Categories**
 
 **URL:** `GET /home/categories`  
 **Endpoint:** [http://localhost:5000/home/categories]
@@ -556,9 +562,9 @@ https://machine-learning-1042086567112.asia-southeast1.run.app
     "message": "Recipe gagal dihapus dari favorit"
 }
 ```
-# 18. **Get Favorite Categories**
+# 18. **POST Favorite Categories**
 
-**URL:** `GET /favorite/categories`  
+**URL:** `POST /favorite/categories`  
 **Endpoint:** [http://localhost:5000/favorite/categories]
 
 **Request:**
